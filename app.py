@@ -30,60 +30,61 @@ def create_db():
 def index():
     return render_template('index.html', show_sidebar=True)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if not username or not password:
-            flash('Please fill out all fields', 'danger')
-            return redirect(url_for('login'))
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            flash('Login successful', 'success')
-            return redirect(url_for('home'))
-        else:
-            flash('Login failed. Check your credentials', 'danger')
-    return render_template('login.html', show_sidebar=False)    
+# removed for temporary period
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         username = request.form['username']
+#         password = request.form['password']
+#         if not username or not password:
+#             flash('Please fill out all fields', 'danger')
+#             return redirect(url_for('login'))
+#         user = User.query.filter_by(username=username).first()
+#         if user and check_password_hash(user.password, password):
+#             session['user_id'] = user.id
+#             flash('Login successful', 'success')
+#             return redirect(url_for('home'))
+#         else:
+#             flash('Login failed. Check your credentials', 'danger')
+#     return render_template('login.html', show_sidebar=False)    
 
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        if not username or not email or not password:
-            flash('Please fill out all fields', 'danger')
-            return redirect(url_for('signup'))
-        hashed_password = generate_password_hash(password).decode('utf-8')
-        user = User(username=username, email=email, password=hashed_password)
-        db.session.add(user)
-        db.session.commit()
-        flash('Signup successful, please log in', 'success')
-        return redirect(url_for('login'))
-    return render_template('signup.html', show_sidebar=False)
+# @app.route('/signup', methods=['GET', 'POST'])
+# def signup():
+#     if request.method == 'POST':
+#         username = request.form['username']
+#         email = request.form['email']
+#         password = request.form['password']
+#         if not username or not email or not password:
+#             flash('Please fill out all fields', 'danger')
+#             return redirect(url_for('signup'))
+#         hashed_password = generate_password_hash(password).decode('utf-8')
+#         user = User(username=username, email=email, password=hashed_password)
+#         db.session.add(user)
+#         db.session.commit()
+#         flash('Signup successful, please log in', 'success')
+#         return redirect(url_for('login'))
+#     return render_template('signup.html', show_sidebar=False)
         
 
-@app.route('/profile', methods=['GET', 'POST'])
-def profile():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    user = User.query.get(session['user_id'])
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        if not username or not email:
-            flash('Username and email are required', 'danger')
-        else:
-            user.username = username
-            user.email = email
-            if password:
-                user.password = generate_password_hash(password).decode('utf-8')
-            db.session.commit()
-            flash('Profile updated', 'success')
-    return render_template('profile.html', user=user, show_sidebar=False)
+# @app.route('/profile', methods=['GET', 'POST'])
+# def profile():
+#     if 'user_id' not in session:
+#         return redirect(url_for('login'))
+#     user = User.query.get(session['user_id'])
+#     if request.method == 'POST':
+#         username = request.form['username']
+#         email = request.form['email']
+#         password = request.form['password']
+#         if not username or not email:
+#             flash('Username and email are required', 'danger')
+#         else:
+#             user.username = username
+#             user.email = email
+#             if password:
+#                 user.password = generate_password_hash(password).decode('utf-8')
+#             db.session.commit()
+#             flash('Profile updated', 'success')
+#     return render_template('profile.html', user=user, show_sidebar=False)
 
 @socketio.on('message')
 def handleMessage(msg):
