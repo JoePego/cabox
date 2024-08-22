@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Chatterbox - Home{% endblock %}
+
+{% block content %}
+<!-- <div id="content"> -->
+    <div class="container">
+        <div class="row clearfix">
+            <div class="col-lg-12">
+                <div class="card chat-app">
+                    <div class="chat">
+                        <div class="chat-history" id="chat-box">
+                            <!-- Messages will appear here -->
+                        </div>
+                        <div class="chat-message clearfix">
+                            <div class="input-group mb-03">
+                                <input type="text" id="message-input" class="form-control"
+                                    placeholder="Enter text here...">
+                                <div class="input-group-append">
+                                    <button id="send-button" type="submit" value="submit"
+                                        class="btn btn-primary">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- </div> -->
+{% endblock %}
