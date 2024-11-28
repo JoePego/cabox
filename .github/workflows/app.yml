@@ -1,22 +1,16 @@
-name: Flask App Build + Deployment
+name: Flask App CI/CD
 
 on:
-  # Runs on push to any of the below branches
   push:
-    branches: 
-      - master
+    branches:
       - main
-  # Runs on pull request events that target one of the below branches
+      - master
   pull_request:
-    branches: 
-      - master
+    branches:
       - main
+      - master
+  workflow_dispatch: # Allow manual triggering of the workflow
 
-  # Allows you to run this workflow manually from the Actions tab of the repository
-  workflow_dispatch:
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "flask-deployment"
   cancel-in-progress: false
@@ -36,38 +30,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      # Set up Python environment
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install Python Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      # Install dependencies
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Run the Flask app for testing
+      - name: Run Flask app
+        run: |
+          python -m flask run --host=0.0.0.0 --port=8080 &
+          sleep 10
+          curl -f http://127.0.0.1:8080
 
   deploy:
-    needs: build  # wait for the "build" job to get done before executing this "deploy" job
+    needs: build  # Deploy job depends on the build job
 
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
+      # Set up SSH for server deployment
       - name: Set up SSH for server deployment
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      # Copy files to the server
       - name: Copy files to server
         run: |
-          # Copy files to the server using SCP
           scp -r * ${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
 
+      # SSH into the server and restart the Flask app
       - name: SSH into server and restart Flask app
         run: |
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} << 'EOF'
@@ -77,6 +84,6 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt
             # Restart your Flask app (assuming you use a process manager like gunicorn)
-            pkill -f gunicorn
+            pkill -f gunicorn || true
             nohup gunicorn -b 0.0.0.0:5000 app:app &
           EOF
