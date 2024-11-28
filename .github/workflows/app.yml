@@ -20,10 +20,6 @@ env:
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.9
   FLASK_APP: app.py
-  SERVER_USER: your-server-user
-  SERVER_HOST: your-server-ip-or-domain
-  SERVER_PATH: /path/to/deploy/folder
-  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }} # Add SSH private key to GitHub Secrets for authentication
 
 jobs:
   build:
@@ -63,27 +59,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up SSH for server deployment
-      - name: Set up SSH for server deployment
-        uses: webfactory/ssh-agent@v0.5.3
+      # Prepare deployment artifacts (e.g., zip files)
+      - name: Package Flask App
+        run: |
+          zip -r flask_app.zip ./*
+          echo "Application packaged for deployment."
+
+      # Upload deployment artifact (Optional, for debugging or downloading)
+      - name: Upload Deployment Artifact
+        uses: actions/upload-artifact@v3
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          name: flask-app
+          path: flask_app.zip
 
-      # Copy files to the server
-      - name: Copy files to server
+      # Deployment instructions
+      - name: Deployment Instructions
         run: |
-          scp -r * ${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
-
-      # SSH into the server and restart the Flask app
-      - name: SSH into server and restart Flask app
-        run: |
-          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} << 'EOF'
-            cd ${SERVER_PATH}
-            # Set up virtual environment and install dependencies
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
-            # Restart your Flask app (assuming you use a process manager like gunicorn)
-            pkill -f gunicorn || true
-            nohup gunicorn -b 0.0.0.0:5000 app:app &
-          EOF
+          echo "Deployment job completed. Please download the artifact and manually deploy to the server."
